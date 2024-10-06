@@ -1,30 +1,42 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from model import load_trained_model, make_prediction  # Your model-related imports
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from model import load_trained_model, make_prediction  # Import model functions
 
 # Initialize FastAPI app
 app = FastAPI()
 
+# Enable CORS to allow frontend to communicate with FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace with your website URL if needed for better security, e.g., ["https://your-website.com"]
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Load your pre-trained model
 model = load_trained_model()
 
-# Set up Jinja2 templates (for rendering HTML)
-templates = Jinja2Templates(directory="templates")
-
-# Define a route to display the input form
-@app.get("/", response_class=HTMLResponse)
-async def get_form(request: Request):
-    return templates.TemplateResponse("form.html", {"request": request})
-
 # Define a route to handle form submission and make predictions
-@app.post("/predict", response_class=HTMLResponse)
-async def predict(request: Request, year: int = Form(...), region: str = Form(...)):
-    # Create the input dictionary
-    input_data_dict = {"year": year, "region": region}
-    
-    # Get prediction from the model
-    prediction = make_prediction(model, input_data_dict)
+@app.post("/predict")
+async def predict(request: Request):
+    try:
+        # Parse the incoming JSON data
+        data = await request.json()
+        year = data['year']
+        region = data['region']
+        
+        # Ensure the incoming data is in the correct format
+        if not isinstance(year, int) or not isinstance(region, str):
+            return {"error": "Invalid input format"}
 
-    # Return the prediction and render it on the result page
-    return templates.TemplateResponse("result.html", {"request": request, "year": year, "region": region, "prediction": prediction})
+        # Prepare the input dictionary
+        input_data_dict = {"year": year, "region": region}
+
+        # Make the prediction using the model
+        prediction = make_prediction(model, input_data_dict)
+
+        # Return the prediction as a JSON response
+        return {"prediction": prediction}
+    
+    except Exception as e:
+        return {"error": str(e)}  # Catch and return any error
