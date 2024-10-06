@@ -1,7 +1,7 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input
-from sklearn.preprocessing import StandardScaler
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 # Assuming you already have a model definition, you can recreate it
 def load_trained_model():
@@ -19,8 +19,6 @@ def load_trained_model():
 
     return model
 
-
-
 # Function to preprocess the input data
 def preprocess_input(input_data):
     # Extract year and region from input_data
@@ -30,13 +28,13 @@ def preprocess_input(input_data):
     # Example of how you may process year and region
     scaler = StandardScaler()
     year_scaled = scaler.fit_transform([[year]])[0][0]
-    
+
     # Assuming region is encoded (label encoded or one-hot encoded)
-    region_encoded = 0  # Add encoding logic for the region
+    region_encoded = 0  # Add encoding logic for the region if needed
 
     # Combine the preprocessed features into a single array
     preprocessed_data = np.array([[year_scaled, region_encoded]])
-    
+
     return preprocessed_data
 
 def make_prediction(model, input_data):
